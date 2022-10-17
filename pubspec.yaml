@@ -39,7 +39,7 @@ dependencies:
   local_auth: ^2.1.2
   velocity_x: ^3.6.0
   barcode_scan2: ^4.2.1
-  adaptive_theme: ^1.0.0
+  url_launcher: ^6.1.6
   # barcode_scan_fix: ^1.0.2
   
 

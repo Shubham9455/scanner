@@ -1,22 +1,47 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+// ignore: must_be_immutable
 class HomePage extends StatefulWidget {
   LocalAuthentication auth = LocalAuthentication();
   bool authSuccess = false;
   bool gotResult = false;
-
+  
   HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
   String qrCodeResult = "Not Yet Scanned";
+
+  _launchURLBrowser(String url,context) async {
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url),mode: LaunchMode.externalApplication);
+    }else{
+      showDialog(context: context, builder: ((context) {
+        return AlertDialog(
+          title: const Text("Error"),
+          content: Text("Could not launch: '$url'"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("OK"),
+            )
+          ],
+        );
+      }));
+    }
+  }
   Future authenticate() async {
     final bool isBiometricsAvailable = await auth.isDeviceSupported();
-    bool isBiometricSupported = await auth.isDeviceSupported();
+    
 
     if (!isBiometricsAvailable) {
       debugPrint("Biometrics not available");
@@ -44,10 +69,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: "Scanner APP".text.make().pOnly(left: 20),
+          title: "Scanner APP".text.make().centered(),
         ),
         body: Center(
-          child: widget.gotResult
+          child: (!widget.gotResult
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -69,16 +94,33 @@ class _HomePageState extends State<HomePage> {
                           setState(() {
                             if (codeSanner.rawContent != "") {
                               widget.qrCodeResult = codeSanner.rawContent;
+                              widget.qrCodeResult = codeSanner.rawContent;
+                              widget.gotResult = true;
+                              widget.authSuccess = true;
+                            }else{
+                              showDialog(context: context, builder: ((context) {
+                                return AlertDialog(
+                                  title: const Text("Error"),
+                                  content: const Text("Please Scan Again"),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: const Text("OK"),
+                                    )
+                                  ],
+                                );
+                              }));
                             }
-                            widget.qrCodeResult = codeSanner.rawContent;
-                            widget.gotResult = true;
-                            widget.authSuccess = true;
+                            
                           });
                         } else {
                           Container();
                         }
                       },
                     ),
+                    "Click to Scan QR Code".text.make().pOnly(top: 20,left: 15),
                   ],
                 )
               : Column(
@@ -94,11 +136,16 @@ class _HomePageState extends State<HomePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               ElevatedButton(
-                                onPressed:(){},
-                                child: "Copy Text".text.make(),
+                                onPressed:(){
+
+                                  Clipboard.setData(ClipboardData(text: widget.qrCodeResult));
+                                },
+                                child: "Copy To ClipBoard".text.make(),
                               ).py12(),
                               ElevatedButton(
-                                onPressed:(){},
+                                onPressed:() async {
+                                  await widget._launchURLBrowser(widget.qrCodeResult,context);
+                                },
                                 child: "Open In Browser".text.make(),
                               )
                             ],
@@ -124,8 +171,14 @@ class _HomePageState extends State<HomePage> {
                         });
                       },
                     ),
+                     "Click to Scan Again"
+                          .text
+                          .make()
+                          .pOnly(top: 20, left: 15),
                   ],
-                ),
-        ));
+                ))
+        )
+        
+        );
   }
 }
