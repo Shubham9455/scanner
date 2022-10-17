@@ -38,6 +38,9 @@ dependencies:
   cupertino_icons: ^1.0.2
   local_auth: ^2.1.2
   velocity_x: ^3.6.0
+  barcode_scan2: ^4.2.1
+  adaptive_theme: ^1.0.0
+  # barcode_scan_fix: ^1.0.2
   
 
 dev_dependencies:
